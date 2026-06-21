@@ -100,7 +100,7 @@ export default function FilmPlayer({
             {showNarration && currentItem?.narration && (
               <div className="absolute bottom-12 left-0 right-0 text-center px-8">
                 <p
-                  className={`text-white font-body text-lg md:text-xl drop-shadow-lg animate-fade-in ${currentItem.narrationStyle.fontSize}`}
+                  className={`font-body text-lg md:text-xl drop-shadow-lg animate-fade-in ${currentItem.narrationStyle.fontSize} ${currentItem.narrationStyle.color}`}
                   style={{
                     fontFamily:
                       currentItem.narrationStyle.fontFamily === 'display'

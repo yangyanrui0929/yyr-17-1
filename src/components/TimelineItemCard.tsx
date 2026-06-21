@@ -103,8 +103,16 @@ export default function TimelineItemCard({
 
             {item.narration && (
               <div className="mt-2 flex items-start gap-1">
-                <Type className="w-3 h-3 text-neon-mint shrink-0 mt-0.5" />
-                <p className="text-xs text-neon-mint line-clamp-2 font-body">
+                <Type className={`w-3 h-3 shrink-0 mt-0.5 ${item.narrationStyle.color}`} />
+                <p
+                  className={`text-xs line-clamp-2 ${item.narrationStyle.fontSize} ${item.narrationStyle.color} ${
+                    item.narrationStyle.fontFamily === 'display'
+                      ? 'font-display'
+                      : item.narrationStyle.fontFamily === 'mono'
+                      ? 'font-mono'
+                      : 'font-body'
+                  }`}
+                >
                   {item.narration}
                 </p>
               </div>

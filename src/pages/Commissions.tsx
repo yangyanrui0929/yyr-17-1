@@ -10,9 +10,11 @@ export default function Commissions() {
   const commissions = useGameStore((state) => state.commissions);
   const characters = useGameStore((state) => state.characters);
   const emotions = useGameStore((state) => state.emotions);
+  const editVersions = useGameStore((state) => state.editVersions);
   const acceptCommission = useGameStore((state) => state.acceptCommission);
   const createEditVersion = useGameStore((state) => state.createEditVersion);
   const setCurrentEditVersion = useGameStore((state) => state.setCurrentEditVersion);
+  const setCurrentCommission = useGameStore((state) => state.setCurrentCommission);
 
   const [selectedCommission, setSelectedCommission] = useState<Commission | null>(null);
 
@@ -207,7 +209,19 @@ export default function Commissions() {
                 ) : (
                   <button
                     onClick={() => {
-                      setCurrentEditVersion(null);
+                      setCurrentCommission(selectedCommission.id);
+                      const existingVersion = editVersions.find(
+                        (v) => v.commissionId === selectedCommission.id
+                      );
+                      if (existingVersion) {
+                        setCurrentEditVersion(existingVersion.id);
+                      } else {
+                        const versionId = createEditVersion(
+                          selectedCommission.id,
+                          `${selectedCommission.title} - 初剪`
+                        );
+                        setCurrentEditVersion(versionId);
+                      }
                       setSelectedCommission(null);
                       navigate('/workshop');
                     }}

@@ -22,8 +22,9 @@ interface GameStore extends GameState {
   updateEditVersion: (versionId: string, updates: Partial<EditVersion>) => void;
   deleteEditVersion: (versionId: string) => void;
   setCurrentEditVersion: (versionId: string | null) => void;
+  setCurrentCommission: (commissionId: string | null) => void;
 
-  addTimelineItem: (clipId: string) => void;
+  addTimelineItem: (clipId: string, insertIndex?: number) => void;
   removeTimelineItem: (itemId: string) => void;
   reorderTimelineItems: (items: TimelineItem[]) => void;
   updateTimelineItem: (itemId: string, updates: Partial<TimelineItem>) => void;
@@ -116,7 +117,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ currentEditVersionId: versionId });
   },
 
-  addTimelineItem: (clipId: string) => {
+  setCurrentCommission: (commissionId: string | null) => {
+    set({ currentCommissionId: commissionId });
+  },
+
+  addTimelineItem: (clipId: string, insertIndex?: number) => {
     const { currentEditVersionId, editVersions } = get();
     if (!currentEditVersionId) return;
 
@@ -136,17 +141,30 @@ export const useGameStore = create<GameStore>((set, get) => ({
       },
     };
 
-    set((state) => ({
-      editVersions: state.editVersions.map((v) =>
-        v.id === currentEditVersionId
-          ? {
-              ...v,
-              timelineItems: [...v.timelineItems, newItem],
-              updatedAt: Date.now(),
-            }
-          : v
-      ),
-    }));
+    set((state) => {
+      const currentVersion = state.editVersions.find((v) => v.id === currentEditVersionId);
+      if (!currentVersion) return state;
+
+      let newItems = [...currentVersion.timelineItems];
+      if (insertIndex !== undefined && insertIndex >= 0 && insertIndex < newItems.length) {
+        newItems.splice(insertIndex, 0, newItem);
+      } else {
+        newItems.push(newItem);
+      }
+      newItems = newItems.map((item, idx) => ({ ...item, order: idx }));
+
+      return {
+        editVersions: state.editVersions.map((v) =>
+          v.id === currentEditVersionId
+            ? {
+                ...v,
+                timelineItems: newItems,
+                updatedAt: Date.now(),
+              }
+            : v
+        ),
+      };
+    });
     get().save();
   },
 

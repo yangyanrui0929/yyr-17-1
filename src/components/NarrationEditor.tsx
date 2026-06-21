@@ -10,7 +10,7 @@ interface NarrationEditorProps {
   locations: Location[];
   emotions: Emotion[];
   onClose: () => void;
-  onSave: (narration: string) => void;
+  onSave: (narration: string, narrationStyle: any) => void;
 }
 
 const fontSizes = [
@@ -53,7 +53,7 @@ export default function NarrationEditor({
   const clipEmotions = emotions.filter((e) => clip?.emotions.includes(e.id));
 
   const handleSave = () => {
-    onSave(narration);
+    onSave(narration, { fontSize, fontFamily, color });
     onClose();
   };
 

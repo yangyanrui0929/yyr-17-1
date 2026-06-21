@@ -8,6 +8,7 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
+  useDroppable,
   type DragStartEvent,
   type DragEndEvent,
 } from '@dnd-kit/core';
@@ -43,6 +44,38 @@ import { timeOfDayLabels, timeOfDayOrder } from '../types';
 import type { ScoringResult } from '../utils/scoring';
 
 type FilterType = 'all' | 'character' | 'location' | 'emotion' | 'time';
+
+function EmptyTimelineDropzone() {
+  const { setNodeRef, isOver } = useDroppable({
+    id: 'timeline-dropzone',
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`h-full flex items-center justify-center border-2 border-dashed rounded-lg transition-all duration-200 ${
+        isOver
+          ? 'border-amber-neon bg-amber-neon/10 scale-[1.01]'
+          : 'border-night-600/50'
+      }`}
+    >
+      <div className="text-center">
+        <Plus
+          className={`w-12 h-12 mx-auto mb-3 transition-colors ${
+            isOver ? 'text-amber-neon' : 'text-night-500'
+          }`}
+        />
+        <p
+          className={`font-body transition-colors ${
+            isOver ? 'text-amber-neon' : 'text-night-400'
+          }`}
+        >
+          {isOver ? '松开鼠标添加素材' : '点击或拖拽素材到这里开始剪辑'}
+        </p>
+      </div>
+    </div>
+  );
+}
 
 export default function Workshop() {
   const navigate = useNavigate();
@@ -167,8 +200,12 @@ export default function Workshop() {
       const clip = clips.find((c) => c.id === activeId);
       if (clip) {
         ensureEditVersion();
+        let insertIndex = -1;
+        if (overIsTimelineItem) {
+          insertIndex = timelineItems.findIndex((item) => item.id === overId);
+        }
         setTimeout(() => {
-          addTimelineItem(activeId);
+          addTimelineItem(activeId, insertIndex);
         }, 0);
       }
     }
@@ -185,8 +222,12 @@ export default function Workshop() {
     addTimelineItem(clip.id);
   };
 
-  const handleSaveNarration = (itemId: string, narration: string) => {
-    updateTimelineItem(itemId, { narration });
+  const handleSaveNarration = (itemId: string, narration: string, narrationStyle?: any) => {
+    const updates: any = { narration };
+    if (narrationStyle) {
+      updates.narrationStyle = narrationStyle;
+    }
+    updateTimelineItem(itemId, updates);
   };
 
   const handleSubmit = () => {
@@ -239,7 +280,6 @@ export default function Workshop() {
   };
 
   const timelineItemIds = sortedTimelineItems.map((item) => item.id);
-  const allDroppableIds = [...timelineItemIds, 'timeline-dropzone'];
 
   return (
     <div className="min-h-screen bg-night-900 film-grain">
@@ -399,20 +439,13 @@ export default function Workshop() {
                   data-id="timeline-dropzone"
                   className="flex-1 overflow-y-auto"
                 >
-                  <SortableContext
-                    items={allDroppableIds}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    {sortedTimelineItems.length === 0 ? (
-                      <div className="h-full flex items-center justify-center border-2 border-dashed border-night-600/50 rounded-lg">
-                        <div className="text-center">
-                          <Plus className="w-12 h-12 mx-auto text-night-500 mb-3" />
-                          <p className="text-night-400 font-body">
-                            点击或拖拽素材到这里开始剪辑
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
+                  {sortedTimelineItems.length === 0 ? (
+                    <EmptyTimelineDropzone />
+                  ) : (
+                    <SortableContext
+                      items={timelineItemIds}
+                      strategy={verticalListSortingStrategy}
+                    >
                       <div className="space-y-2">
                         {sortedTimelineItems.map((item) => {
                           const clip = clips.find((c) => c.id === item.clipId);
@@ -431,8 +464,8 @@ export default function Workshop() {
                           );
                         })}
                       </div>
-                    )}
-                  </SortableContext>
+                    </SortableContext>
+                  )}
                 </div>
               </div>
 
@@ -574,7 +607,7 @@ export default function Workshop() {
           locations={locations}
           emotions={emotions}
           onClose={() => setEditingItem(null)}
-          onSave={(narration) => handleSaveNarration(editingItem.id, narration)}
+          onSave={(narration, narrationStyle) => handleSaveNarration(editingItem.id, narration, narrationStyle)}
         />
       )}
 
